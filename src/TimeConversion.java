@@ -1,0 +1,110 @@
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
+public class TimeConversion {
+
+    /**
+     * *
+     * Format Name: basicDateFormat Format String: yyyy-MM-dd h:mma Example:
+     * 2015­01­07 1:29PM
+     */
+    public final static String BASIC_FORMAT_PATTERN = "yyyy-MM-dd h:mma";
+    public DateFormat basicDateFormat = new SimpleDateFormat(BASIC_FORMAT_PATTERN);
+    /**
+     * *
+     * Format Name: isoDateFormat Format String: yyyy-MM-dd'T'hh:mm:ss.SSS'Z'
+     * Example: 2014­02­09T02:00:00.000Z
+     */
+    public final static String ISO_FORMAT_PATTERN = "yyyy-MM-dd'T'hh:mm:ss.SSS'Z'";
+    public DateFormat isoDateFormat = new SimpleDateFormat(ISO_FORMAT_PATTERN);
+
+    /**
+     * *
+     *
+     * @param time date­time string assumed to be in the basicDateFormat.
+     * @return basicDateFormat date­time string representing one hour earlier.
+     * @throws java.text.ParseException
+     */
+    public String one_hour_earlier(String time) throws ParseException {
+        Date date = basicDateFormat.parse(time);
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add(Calendar.HOUR, -1);
+
+        return basicDateFormat.format(cal.getTime());
+    }
+
+    /**
+     * *
+     *
+     * @return true if the computer is operating in the Central time zone or
+     * false otherwise.
+     */
+    public boolean is_central_time() {
+        return TimeZone.getDefault().getDisplayName().equals(TimeZone.getTimeZone("CST").getDisplayName());
+    }
+
+    /**
+     * *
+     *
+     * @param time date­time string in basicDateFormat
+     * @return a version of the same time in Greenwich Mean Time (GMT) in
+     * isoDateFormat REF: GMT is 8 hours ahead of PST and 5 hours ahead of EST.
+     * @throws java.text.ParseException
+     */
+    public String to_calendar_format(String time) throws ParseException {
+        String dateInString = time;
+        LocalDateTime localTime = LocalDateTime.parse(dateInString, DateTimeFormatter.ofPattern(BASIC_FORMAT_PATTERN));
+
+        ZoneId defaultZoneId = TimeZone.getDefault().toZoneId();
+        ZonedDateTime defaultZonedDateTime = localTime.atZone(defaultZoneId);
+
+        ZoneId gmtZoneId = TimeZone.getTimeZone("GMT").toZoneId();
+        ZonedDateTime gmtDateTime = defaultZonedDateTime.withZoneSameInstant(gmtZoneId);
+
+        DateTimeFormatter format = DateTimeFormatter.ofPattern(ISO_FORMAT_PATTERN);
+
+        return format.format(gmtDateTime);
+    }
+
+    public static void main(String[] args) throws ParseException {
+        TimeConversion tc = new TimeConversion();
+        String exampleTime = "";
+        //
+        // get one hour earlier
+        //
+        exampleTime = "2015-01-07 2:29PM";
+        System.out.println(exampleTime + " (Original Time)");
+        System.out.println(tc.one_hour_earlier(exampleTime) + " (1hr Earlier Time)" + "\n");
+        //
+        // get one hour earlier
+        //
+        exampleTime = "2015-01-01 12:34AM";
+        System.out.println(exampleTime + " (Original Time)");
+        System.out.println(tc.one_hour_earlier(exampleTime) + " (1hr Earlier Time)" + "\n");
+        //
+        // current time zone
+        //
+        String myTimeZone = TimeZone.getDefault().getDisplayName();
+        System.out.println("PC Time Zone: " + myTimeZone);
+        //
+        // whether central time zone or not
+        //
+        System.out.println("is Central Standard Time: " + tc.is_central_time() + "\n");
+        //
+        // convert from basicDateFormat to GMT in isoDateFormat
+        //
+        exampleTime = "2014-02-08 6:00PM";
+        System.out.println(exampleTime + " [" + myTimeZone + "]");
+        System.out.println(tc.to_calendar_format(exampleTime) + " [Greenwich Mean Time]");
+    }
+}
